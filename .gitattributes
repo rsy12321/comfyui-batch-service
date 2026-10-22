@@ -1,0 +1,2 @@
+# Preserve command logs verbatim, including tool-generated trailing spaces.
+reports/evidence/**/*.log -whitespace

@@ -2,7 +2,7 @@
 
 Java / Spring Boot 作品集 Demo：将 ComfyUI API 工作流变成可追踪的批量任务，展示 MySQL 持久队列、WebSocket 进度、失败重试、图片落盘及重启恢复。第一版采用单服务实例，不包含前端。
 
-验收状态和实际证据见 [2026-10-22 报告](reports/20261022-v1-report.md)。报告区分自动化测试、真实环境实测及未验证事项。
+功能基线见 [v1 报告](reports/20261022-v1-report.md)，可读性重构与兼容回归见 [v1.1 报告](reports/20261022-v1.1-refactor-report.md)。报告区分自动化测试、真实环境实测及未验证事项。
 
 ## 架构
 
@@ -44,6 +44,28 @@ stateDiagram-v2
 ```
 
 重试属于子任务内部的执行尝试：失败时记录 `cb_attempt.error` 和同状态事件，不将终态 FAILED 改回 PENDING。首次执行加最多 3 次重试，共 4 次；默认退避 1、2、4 秒。仅耗尽后进入 FAILED。`SUBMITTED` 表示已持久化提交意图，HTTP 拒绝时也保留该状态等待重试。进度来自当前节点，不是整张图的严格线性百分比。
+
+## 10 分钟阅读路线（v1.1）
+
+| 顺序 | 文件 | 重点 |
+|---|---|---|
+| 1 分钟 | `api/BatchController.java`、`api/ApiModels.java` | HTTP 入口与 record 请求/响应；Controller 不包含 SQL |
+| 2 分钟 | `service/JobService.java`、`WorkflowParameters.java` | 幂等判断、事务内创建批次、映射参数和 seed |
+| 3 分钟 | `service/TaskWorker.java` | `run → submit/reconcile → pollUntilDone → complete/handleFailure` |
+| 2 分钟 | `TaskRecovery.java`、`TaskLifecycle.java`、`TaskFailureHandler.java` | 恢复判断、JVM 全局锁、状态机与退避 |
+| 2 分钟 | `repository/*Repository.java`、`comfy/ComfyClient.java` | 六张业务表的 SQL/RowMapper 与远端协议 |
+
+以上路径均相对于 `src/main/java/dev/comfybatch/`。`domain` 包保存明确类型的领域对象；`config/AppProperties` 集中绑定原有配置；`support/Json` 仅提供 JSON 与哈希工具。
+
+所有 Java 代码用 Spotless + google-java-format AOSP（4 空格）格式化。验收命令：
+
+```bash
+./scripts/mvn.sh spotless:check test
+```
+
+`ApiContractTest` 补充检查旧响应的字段名、扁平结构及 HTTP 状态。v1.1 按任务要求统一错误体为 `code/message/details`；这项错误 JSON 格式是明确的接口变化，成功响应、状态码及业务规则保持兼容。客户端如解析旧 `error` 字段需要调整。异常原因保留在服务日志或安全的错误说明中，响应不包含 SQL 和内部堆栈。
+
+维护者可选运行 `python3 scripts/java_metrics.py --check` 检查 AST 方法长度、行宽及变量名；需把 `tree-sitter==0.23.2` 和 `tree-sitter-java==0.23.5` 安装到项目 `.tools/metrics`，不属于服务运行依赖。
 
 ## 环境与启动
 
@@ -140,8 +162,8 @@ curl -sS -H "X-API-Key: $API_KEY" http://127.0.0.1:8080/api/results/结果UUID/f
 
 ## 测试与证据
 
-- `ServiceTest`：状态机、参数校验回滚、映射/seed、幂等与冲突、指数退避和重试上限、WS 消息、取消。
-- `RecoveryTest`：真实 WS 模拟握手、WS 不可用时从 history 恢复且不重提、历史/队列都丢失时安排重试、只删除目标 queued prompt、超时 interrupt 后重试、网络不可达时保留 prompt_id。
+- `JobScenarioTest`：状态机、参数校验回滚、映射/seed、幂等与冲突、指数退避和重试上限、WS 消息、取消。
+- `RecoveryScenarioTest`：真实 WS 模拟握手、WS 不可用时从 history 恢复且不重提、历史/队列都丢失时安排重试、只删除目标 queued prompt、超时 interrupt 后重试、网络不可达时保留 prompt_id。
 - `scripts/probe_comfy.py`：本次第 0 步检查脚本，读取本机已有 ComfyUI 示例；记录四接口交互和 PNG。
 - `scripts/probe_mysql.py`：只读连接验证。该脚本使用 `.tools/mysql-probe` 的 PyMySQL（验收辅助工具，非服务运行依赖）。
 - `scripts/e2e.py`：连接真实数据库和 ComfyUI；创建验收数据、启动并重启自身管理的 Java 进程；日志不保存鉴权请求头。只在明确需要真实验收时运行，会消耗生图资源并留下业务记录和图片。
