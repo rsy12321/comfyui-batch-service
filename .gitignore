@@ -1,0 +1,10 @@
+.env
+.env.*
+!.env.example
+storage/
+.tools/
+.runtime/
+target/
+.DS_Store
+
+数据库环境.rtf

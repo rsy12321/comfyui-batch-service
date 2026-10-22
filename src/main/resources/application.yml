@@ -1,0 +1,25 @@
+spring:
+  config:
+    import: optional:file:.env[.properties]
+  datasource:
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:comfybatch}?useUnicode=true&characterEncoding=UTF-8&serverTimezone=UTC&allowPublicKeyRetrieval=true
+    username: ${DB_USER:comfybatch}
+    password: ${DB_PASSWORD:}
+  flyway:
+    table: cb_flyway_schema_history
+  jackson:
+    time-zone: UTC
+server:
+  address: 127.0.0.1
+  port: ${SERVER_PORT:8080}
+  error:
+    include-message: never
+app:
+  api-key: ${API_KEY:}
+  comfy-url: ${COMFY_URL:http://127.0.0.1:8188}
+  concurrency: ${CONCURRENCY:1}
+  timeout-seconds: ${TASK_TIMEOUT_SECONDS:600}
+  retry-base-ms: ${RETRY_BASE_MS:1000}
+  poll-ms: ${POLL_MS:1000}
+  storage: ${STORAGE_DIR:storage}
+  worker-enabled: ${WORKER_ENABLED:true}

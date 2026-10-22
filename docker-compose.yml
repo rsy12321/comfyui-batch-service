@@ -1,0 +1,19 @@
+# Only for another developer's local reproduction. Do not run against the existing VM.
+services:
+  mysql:
+    image: mysql:8.0.46
+    environment:
+      MYSQL_DATABASE: ${DB_NAME:-comfybatch}
+      MYSQL_USER: ${DB_USER:-comfybatch}
+      MYSQL_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in .env}
+      MYSQL_RANDOM_ROOT_PASSWORD: 'yes'
+    ports:
+      - '127.0.0.1:${DB_PORT:-3306}:3306'
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ['CMD', 'mysqladmin', 'ping', '-h', '127.0.0.1']
+      interval: 5s
+      retries: 20
+volumes:
+  mysql-data:
