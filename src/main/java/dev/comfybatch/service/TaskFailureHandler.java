@@ -1,8 +1,10 @@
 package dev.comfybatch.service;
 
 import dev.comfybatch.config.AppProperties;
-import dev.comfybatch.domain.*;
-import dev.comfybatch.repository.*;
+import dev.comfybatch.domain.Task;
+import dev.comfybatch.domain.TaskState;
+import dev.comfybatch.repository.TaskAttemptRepository;
+import dev.comfybatch.repository.TaskRepository;
 import java.util.Objects;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionTemplate;
@@ -72,11 +74,11 @@ public class TaskFailureHandler {
                     task.state().name(),
                     "Cancellation pending: " + message);
             tasks.setNextRun(task.id(), now + backoff(properties.retryBaseMs(), 1));
-        } else if (task.attempt() >= 4) {
+        } else if (task.attempt() >= properties.maxAttempts()) {
             lifecycle.transition(
                     task.id(),
                     TaskState.FAILED,
-                    "Initial attempt and 3 retries exhausted: " + message);
+                    "Max attempts (" + properties.maxAttempts() + ") exhausted: " + message);
         } else {
             tasks.scheduleRetry(
                     task.id(),

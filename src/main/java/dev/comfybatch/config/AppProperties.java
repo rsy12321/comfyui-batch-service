@@ -11,4 +11,5 @@ public record AppProperties(
         long retryBaseMs,
         long pollMs,
         String storage,
+        int maxAttempts,
         boolean workerEnabled) {}

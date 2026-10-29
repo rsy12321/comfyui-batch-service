@@ -51,7 +51,9 @@ public class TaskWorker {
                 || properties.concurrency() > 16
                 || properties.timeoutSeconds() < 1
                 || properties.retryBaseMs() < 1
-                || properties.pollMs() < 50)
+                || properties.pollMs() < 50
+                || properties.maxAttempts() < 1
+                || properties.maxAttempts() > 10)
             throw new IllegalArgumentException("Invalid worker configuration");
     }
 

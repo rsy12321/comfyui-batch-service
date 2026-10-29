@@ -61,7 +61,7 @@ public abstract class ScenarioSupport {
 
     protected AppProperties properties(String url, long timeout) {
         return new AppProperties(
-                "test-key-not-secret", url, 1, timeout, 1, 50, "target/test-storage", false);
+                "test-key-not-secret", url, 1, timeout, 1, 50, "target/test-storage", 4, false);
     }
 
     protected TaskWorker workerFor(String url, long timeout) {
