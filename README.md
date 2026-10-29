@@ -167,7 +167,7 @@ curl -sS -H "X-API-Key: $API_KEY" http://127.0.0.1:8080/api/results/结果UUID/f
 - `scripts/probe_comfy.py`：本次第 0 步检查脚本，读取本机已有 ComfyUI 示例；记录四接口交互和 PNG。
 - `scripts/probe_mysql.py`：只读连接验证。该脚本使用 `.tools/mysql-probe` 的 PyMySQL（验收辅助工具，非服务运行依赖）。
 - `scripts/e2e.py`：连接真实数据库和 ComfyUI；创建验收数据、启动并重启自身管理的 Java 进程；日志不保存鉴权请求头。只在明确需要真实验收时运行，会消耗生图资源并留下业务记录和图片。
-- `reports/evidence/`：脱敏请求/响应、测试日志、PNG 清单、数据库交叉核对。`storage/`、`.tools/`、`.runtime/`、`.env` 均被 Git 忽略。
+端到端验收的原始证据未随公开仓库发布，验收结论见 reports/ 下的报告
 
 ## 已知限制
 
@@ -183,3 +183,9 @@ curl -sS -H "X-API-Key: $API_KEY" http://127.0.0.1:8080/api/results/结果UUID/f
 ## 后续规划（本版不实现）
 
 前端页面、多用户体系、云 GPU 对接、LoRA 训练、视频生成；以及多实例调度租约、对象存储和更完整的监控告警。
+
+## 开发说明
+
+本项目在 AI 编程工具辅助下实现；需求与验收标准、代码审查与重构要求、环境搭建、断点调试与崩溃恢复验证由作者负责，最大重试次数配置化由作者亲手实现。
+
+许可证：MIT，见 [LICENSE](LICENSE)。
